@@ -1,0 +1,57 @@
+{
+  "themes": ["space", "nature", "future"],
+  "rounds": 5,
+  "timePerQuestion": 15,
+  "questions": [
+    {
+      "id": 1,
+      "text": "Сколько планет в Солнечной системе?",
+      "options": ["7", "8", "9", "10"],
+      "correct": 1,
+      "difficulty": "easy",
+      "themeTags": ["space"]
+    },
+    {
+      "id": 2,
+      "text": "Какое самое глубокое озеро в мире?",
+      "options": ["Байкал", "Танганьика", "Верхнее", "Виктория"],
+      "correct": 0,
+      "difficulty": "medium",
+      "themeTags": ["nature"]
+    },
+    {
+      "id": 3,
+      "text": "Какой год считается началом эры искусственного интеллекта?",
+      "options": ["1956", "1969", "1984", "2001"],
+      "correct": 0,
+      "difficulty": "hard",
+      "themeTags": ["future"]
+    },
+    {
+      "id": 4,
+      "text": "Сколько спутников у Марса?",
+      "options": ["0", "1", "2", "4"],
+      "correct": 2,
+      "difficulty": "easy",
+      "themeTags": ["space"]
+    },
+    {
+      "id": 5,
+      "text": "Какое дерево является символом Канады?",
+      "options": ["Дуб", "Клён", "Берёза", "Ель"],
+      "correct": 1,
+      "difficulty": "easy",
+      "themeTags": ["nature"]
+    },
+    {
+      "id": 6,
+      "text": "Технология блокчейн впервые реализована в:",
+      "options": ["Bitcoin", "Ethereum", "Litecoin", "Dogecoin"],
+      "correct": 0,
+      "difficulty": "medium",
+      "themeTags": ["future"]
+    }
+  ],
+  "leaderboard": [],
+  "teams": []
+}

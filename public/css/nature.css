@@ -1,0 +1,5 @@
+body { background: linear-gradient(to bottom, #2d5a27, #0f260e); }
+.team-name, .question-text { color: #d4e157; }
+.option-btn { border-color: #81c784; background: rgba(129,199,132,0.3); }
+.option-btn:hover { background: rgba(129,199,132,0.6); }
+#pause-overlay { background: rgba(34,49,34,0.9); }

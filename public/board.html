@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Доска</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link id="theme-style" rel="stylesheet" href="css/space.css">
+</head>
+<body>
+  <div id="board-container">
+    <!-- Разделённый экран для 4 команд -->
+    <div id="split-screen" style="display:none; height:100vh;">
+      <div id="team-left" class="team-half">
+        <div class="team-name">Команда <span class="team-letter">A</span></div>
+        <div class="score-box">0</div>
+        <div class="question-text"></div>
+        <div class="options-grid"></div>
+      </div>
+      <div id="team-right" class="team-half">
+        <div class="team-name">Команда <span class="team-letter">B</span></div>
+        <div class="score-box">0</div>
+        <div class="question-text"></div>
+        <div class="options-grid"></div>
+      </div>
+    </div>
+    <!-- Единый экран для 1-2 команд -->
+    <div id="single-screen" style="display:flex; height:100vh;">
+      <div class="team-full">
+        <div class="team-name">Команда <span class="team-letter">A</span></div>
+        <div class="score-box">0</div>
+        <div class="question-text"></div>
+        <div class="options-grid"></div>
+      </div>
+    </div>
+    <!-- Заглушка паузы -->
+    <div id="pause-overlay" style="display:none;">
+      <div class="pause-icon">⏸</div>
+      <div class="pause-text">Игра приостановлена</div>
+    </div>
+    <!-- Индикатор паузы в углу -->
+    <div id="pause-indicator" style="display:none;">⏸</div>
+  </div>
+
+  <script src="js/board.js"></script>
+</body>
+</html>
