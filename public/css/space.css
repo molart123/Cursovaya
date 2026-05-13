@@ -1,5 +1,0 @@
-body { background: radial-gradient(ellipse at bottom, #0d1b2a 0%, #000000 100%); }
-.team-name, .question-text { color: #a8dadc; }
-.option-btn { border-color: #457b9d; background: rgba(69,123,157,0.3); }
-.option-btn:hover { background: rgba(69,123,157,0.6); }
-#pause-overlay { background: rgba(13,27,42,0.9); }
