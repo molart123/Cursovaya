@@ -1,11 +1,7 @@
-// Загружаем все данные с сервера при старте
-fetch('/config')
+// Загружаем список тем
+fetch('/themes')
     .then(response => response.json())
     .then(data => {
-        // Устанавливаем режим игры
-        document.getElementById('gameModeSelect').value = data.gameConfig.mode;
-
-        // Заполняем список тем и устанавливаем текущую
         const themeSelect = document.getElementById('themeSelect');
         data.themes.forEach(theme => {
             const option = document.createElement('option');
@@ -13,16 +9,23 @@ fetch('/config')
             option.textContent = theme;
             themeSelect.appendChild(option);
         });
-        themeSelect.value = data.gameConfig.theme;
+        themeSelect.value = data.currentTheme;
+    });
 
-        // Устанавливаем названия команд
+// Загружаем конфигурацию (режим, команды, длительность)
+fetch('/config')
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('gameModeSelect').value = data.gameConfig.mode;
+        document.getElementById('roundDurationInput').value = data.gameConfig.roundDuration;
+
         data.teams.forEach((team, index) => {
             const teamNumber = index + 1;
             const nameLabel = document.getElementById(`team${teamNumber}NameLabel`);
+            const scoreLabel = document.getElementById(`team${teamNumber}ScoreLabel`);
             if (team.name) {
                 nameLabel.textContent = `Команда ${teamNumber}: ${team.name}`;
             }
-            const scoreLabel = document.getElementById(`team${teamNumber}ScoreLabel`);
             scoreLabel.textContent = `Счет: ${team.score}`;
         });
     });
@@ -45,14 +48,32 @@ document.getElementById('themeSelect').addEventListener('change', function() {
     });
 });
 
+// Изменение длительности раунда
+document.getElementById('roundDurationInput').addEventListener('change', function() {
+    const newValue = parseInt(this.value, 10);
+    if (newValue && newValue >= 10) {
+        fetch('/round-duration', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({key: newValue})
+        });
+    } else {
+        alert('Минимальная длительность 10 секунд');
+        // Восстановим предыдущее значение из базы, чтобы не терять
+        fetch('/config')
+            .then(res => res.json())
+            .then(config => {
+                this.value = config.gameConfig.roundDuration;
+            });
+    }
+});
+
 // Переименование команд
 document.getElementById('teamsContainer').addEventListener('click', function(event) {
     const id = event.target.id;
-
     if (id.includes('RenameBtn')) {
         const teamNumber = id.match(/\d+/)[0];
         const newName = prompt('Введите новое название команды:');
-
         if (newName) {
             fetch(`/team/${teamNumber}/name`, {
                 method: 'POST',
@@ -60,7 +81,8 @@ document.getElementById('teamsContainer').addEventListener('click', function(eve
                 body: JSON.stringify({key: newName})
             })
                 .then(() => {
-                    document.getElementById(`team${teamNumber}NameLabel`).textContent = `Команда ${teamNumber}: ${newName}`;
+                    const nameLabel = document.getElementById(`team${teamNumber}NameLabel`);
+                    nameLabel.textContent = `Команда ${teamNumber}: ${newName}`;
                 });
         }
     }
@@ -69,33 +91,17 @@ document.getElementById('teamsContainer').addEventListener('click', function(eve
 // Управление игрой (start/stop/resume/shutdown)
 document.getElementById('isRunning').addEventListener('click', function(event) {
     const id = event.target.id;
+    let action = '';
+    if (id.includes('start')) action = 'start game';
+    else if (id.includes('stop')) action = 'stop game';
+    else if (id.includes('resume')) action = 'resume game';
+    else if (id.includes('shutdown')) action = 'shutdown game';
 
-    if (id.includes('start')) {
+    if (action) {
         fetch('/game/process', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({key: 'start game'})
-        });
-    }
-    if (id.includes('stop')) {
-        fetch('/game/process', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({key: 'stop game'})
-        });
-    }
-    if (id.includes('resume')) {
-        fetch('/game/process', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({key: 'resume game'})
-        });
-    }
-    if (id.includes('shutdown')) {
-        fetch('/game/process', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({key: 'shutdown game'})
+            body: JSON.stringify({key: action})
         });
     }
 });

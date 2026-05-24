@@ -1,7 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const app = express();
-const PORT = 63343;
+const PORT = 63342;
 
 app.use(express.json());
 app.use(express.static(__dirname));
@@ -15,8 +15,9 @@ app.get('/config', (req, res) => {
 // Получить список тем и текущую тему
 app.get('/themes', (req, res) => {
     const db = JSON.parse(fs.readFileSync('db.json', 'utf8'));
+    const themeNames = Object.keys(db.themes); // извлекаем ключи объекта
     res.json({
-        themes: db.themes,
+        themes: themeNames,
         currentTheme: db.gameConfig.theme
     });
 });
@@ -66,6 +67,19 @@ app.post('/game/process', (req, res) => {
 
     fs.writeFileSync('db.json', JSON.stringify(db, null, 2));
     res.json({ok: true});
+});
+
+// Изменить длительность раунда
+app.post('/round-duration', (req, res) => {
+    const db = JSON.parse(fs.readFileSync('db.json', 'utf8'));
+    const newDuration = parseInt(req.body.key, 10);
+    if (newDuration && newDuration >= 10) {
+        db.gameConfig.roundDuration = newDuration;
+        fs.writeFileSync('db.json', JSON.stringify(db, null, 2));
+        res.json({ok: true});
+    } else {
+        res.status(400).json({ok: false, message: 'Минимальная длительность 10 секунд'});
+    }
 });
 
 app.listen(PORT, () => console.log(`http://localhost:${PORT}`));

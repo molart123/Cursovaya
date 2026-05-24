@@ -1,4 +1,108 @@
-*{
+* {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #1a1a2e;
+    color: #eee;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.container {
+    background: #16213e;
+    border-radius: 1.5rem;
+    padding: 2rem;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #e94560;
+}
+
+h3 {
+    color: #e94560;
+    margin-bottom: 0.5rem;
+}
+
+.section {
+    margin-bottom: 1.5rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-weight: bold;
+    color: #0f3460;
+}
+
+select,
+input {
+    width: 100%;
+    padding: 0.6rem;
+    border-radius: 0.7rem;
+    border: none;
+    font-size: 1rem;
+    background: #0f3460;
+    color: #eee;
+}
+
+button {
+    background: #e94560;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.2rem;
+    border-radius: 0.7rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+    margin: 0.3rem;
+}
+
+button:hover {
+    background: #c23152;
+}
+
+.danger-btn {
+    background: #b71c1c;
+}
+
+.danger-btn:hover {
+    background: #8e0000;
+}
+
+.btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.team-block {
+    background: #0f3460;
+    padding: 0.8rem;
+    border-radius: 0.7rem;
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.team-block span {
+    flex: 1;
+    color: #eee;
+}
+
+.team-block button {
+    margin: 0;
 }
