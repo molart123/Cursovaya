@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Лазерный тир - Команда 2</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+    body {
+      background-size: cover;
+      background-position: center;
+      font-family: 'Arial', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    .game-area { width: 100%; height: 100%; position: relative; }
+
+    /* ВРАГИ – см. комментарий в team1.html */
+    .enemy {
+      position: absolute;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      text-shadow: 1px 1px 2px black;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    .enemy.easy { background: radial-gradient(circle, #4caf50, #2e7d32); width: 6vmin; height: 6vmin; }
+    .enemy.medium { background: radial-gradient(circle, #ffeb3b, #f9a825); width: 7vmin; height: 7vmin; }
+    .enemy.hard { background: radial-gradient(circle, #f44336, #b71c1c); width: 8vmin; height: 8vmin; }
+
+    /* ЭФФЕКТ ВЗРЫВА – см. комментарий в team1.html */
+    .shot-effect {
+      position: absolute;
+      pointer-events: none;
+      width: 6vmin;
+      height: 6vmin;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23ff6600' stroke='%23ffcc00' stroke-width='6'/%3E%3Ccircle cx='50' cy='50' r='22' fill='%23ffcc00'/%3E%3Cpath d='M50 5 L54 40 L88 28 L60 48 L95 62 L55 58 L50 95 L45 58 L5 62 L40 48 L12 28 L46 40 Z' fill='%23ffcc00'/%3E%3C/svg%3E") center/contain no-repeat;
+      transform: translate(-50%, -50%);
+      opacity: 1;
+      transition: opacity 1s ease-in-out;
+    }
+    .shot-effect.fading { opacity: 0; }
+
+    .score-panel {
+      position: absolute;
+      top: 2vmin;
+      right: 2vmin;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      padding: 1vmin 2vmin;
+      border-radius: 1vmin;
+      font-size: 4vmin;
+    }
+    .timer-panel {
+      position: absolute;
+      top: 2vmin;
+      left: 2vmin;
+      background: rgba(0,0,0,0.6);
+      color: #ffd700;
+      padding: 1vmin 2vmin;
+      border-radius: 1vmin;
+      font-size: 4vmin;
+    }
+    .message-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 5vmin 8vmin;
+      border-radius: 3vmin;
+      font-size: 6vmin;
+      text-align: center;
+      display: none;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-area" id="gameArea">
+    <div class="score-panel" id="scoreDisplay">Очки: 0</div>
+    <div class="timer-panel" id="timerDisplay">00:00</div>
+    <div class="message-overlay" id="messageOverlay"></div>
+  </div>
+
+  <script>
+    (function() {
+      const teamId = '2';
+      const teamName = 'Команда 2';
+
+      const gameArea = document.getElementById('gameArea');
+      const scoreDisplay = document.getElementById('scoreDisplay');
+      const timerDisplay = document.getElementById('timerDisplay');
+      const messageOverlay = document.getElementById('messageOverlay');
+
+      let gameConfig = null;
+      let gameActive = false;
+      let gamePaused = false;
+      let score = 0;
+      let timeLeft = 0;
+      let timerInterval = null;
+      let enemies = [];
+      let animationFrameId = null;
+      let canShoot = true;
+
+      const channel = new BroadcastChannel('laser-game');
+
+      const themes = {
+        space: 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%221.5%22 fill=%22white%22/%3E%3C/svg%3E") repeat, #0b0b2a',
+        jungle: 'linear-gradient(#2d5a27, #1a3b18)',
+        underwater: 'linear-gradient(#0077be, #003d5c)'
+      };
+
+      channel.onmessage = (e) => {
+        const msg = e.data;
+        if (msg.type === 'config') {
+          gameConfig = msg;
+          applyTheme(gameConfig.theme);
+        } else if (msg.type === 'start') {
+          if (!gameConfig) return;
+          if (gameConfig.mode === '1' && teamId !== '1') {
+            showMessage('Ожидание игры...');
+            return;
+          }
+          startGame();
+        } else if (msg.type === 'pause') {
+          pauseGame();
+        } else if (msg.type === 'resume') {
+          resumeGame();
+        } else if (msg.type === 'end') {
+          endGame(true);
+        }
+      };
+
+      function applyTheme(theme) {
+        const bg = themes[theme] || themes.space;
+        document.body.style.background = bg;
+      }
+
+      function startGame() {
+        resetGame();
+        gameActive = true;
+        gamePaused = false;
+        timeLeft = gameConfig.duration;
+        updateTimerDisplay();
+        timerInterval = setInterval(tickTimer, 1000);
+        spawnEnemyLoop();
+        animationFrameId = requestAnimationFrame(moveEnemies);
+        hideMessage();
+        canShoot = true;
+      }
+
+      function resetGame() {
+        enemies.forEach(e => e.element.remove());
+        enemies = [];
+        score = 0;
+        scoreDisplay.textContent = 'Очки: 0';
+        if (timerInterval) clearInterval(timerInterval);
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      }
+
+      function pauseGame() {
+        if (!gameActive || gamePaused) return;
+        gamePaused = true;
+        if (timerInterval) clearInterval(timerInterval);
+        showMessage('⏸️ ПАУЗА');
+      }
+
+      function resumeGame() {
+        if (!gameActive || !gamePaused) return;
+        gamePaused = false;
+        timerInterval = setInterval(tickTimer, 1000);
+        hideMessage();
+      }
+
+      function endGame(adminEnded = false) {
+        if (!gameActive) return;
+        gameActive = false;
+        gamePaused = false;
+        if (timerInterval) clearInterval(timerInterval);
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        channel.postMessage({ type: 'score', team: teamName, score: score, mode: gameConfig?.mode || '1' });
+        showMessage(`🏁 Игра окончена!\nВаш счёт: ${score}`, false);
+        enemies.forEach(e => e.element.remove());
+        enemies = [];
+      }
+
+      function tickTimer() {
+        if (gamePaused) return;
+        timeLeft--;
+        updateTimerDisplay();
+        if (timeLeft <= 0) endGame();
+      }
+
+      function updateTimerDisplay() {
+        const mins = Math.floor(timeLeft / 60);
+        const secs = timeLeft % 60;
+        timerDisplay.textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+      }
+
+      let spawnInterval = null;
+      function spawnEnemyLoop() {
+        if (spawnInterval) clearInterval(spawnInterval);
+        spawnInterval = setInterval(() => {
+          if (!gameActive || gamePaused) return;
+          if (enemies.length >= 12) return;
+          createEnemy();
+        }, 1000);
+      }
+
+      function createEnemy() {
+        const rand = Math.random();
+        let life, cssClass;
+        if (rand < 0.6) { life = 1; cssClass = 'easy'; }
+        else if (rand < 0.85) { life = 2; cssClass = 'medium'; }
+        else { life = 3; cssClass = 'hard'; }
+
+        const enemy = {
+          life: life,
+          maxLife: life,
+          element: document.createElement('div'),
+          x: Math.random() * 80 + 10,
+          y: Math.random() * 80 + 10,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
+        };
+        enemy.element.className = `enemy ${cssClass}`;
+        updateEnemyPosition(enemy);
+        gameArea.appendChild(enemy.element);
+        enemies.push(enemy);
+      }
+
+      function updateEnemyPosition(enemy) {
+        enemy.element.style.left = enemy.x + '%';
+        enemy.element.style.top = enemy.y + '%';
+      }
+
+      let lastTimestamp = 0;
+      function moveEnemies(timestamp) {
+        if (!gameActive || gamePaused) {
+          animationFrameId = requestAnimationFrame(moveEnemies);
+          return;
+        }
+        if (!lastTimestamp) lastTimestamp = timestamp;
+        const dt = (timestamp - lastTimestamp) / 1000;
+        lastTimestamp = timestamp;
+        enemies.forEach(enemy => {
+          enemy.x += enemy.vx * dt;
+          enemy.y += enemy.vy * dt;
+          if (enemy.x < 0 || enemy.x > 94) { enemy.vx *= -1; enemy.x = Math.max(0, Math.min(94, enemy.x)); }
+          if (enemy.y < 0 || enemy.y > 94) { enemy.vy *= -1; enemy.y = Math.max(0, Math.min(94, enemy.y)); }
+          updateEnemyPosition(enemy);
+        });
+        animationFrameId = requestAnimationFrame(moveEnemies);
+      }
+
+      function handleShot(e) {
+        if (!gameActive || gamePaused || !canShoot) return;
+        canShoot = false;
+        const rect = gameArea.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+        createShotEffect(e.clientX - rect.left, e.clientY - rect.top);
+
+        const hitEnemy = getEnemyAtPoint(x, y);
+        if (hitEnemy) {
+          hitEnemy.life--;
+          if (hitEnemy.life <= 0) {
+            const points = hitEnemy.maxLife === 1 ? 5 : (hitEnemy.maxLife === 2 ? 10 : 20);
+            score += points;
+            scoreDisplay.textContent = 'Очки: ' + score;
+            hitEnemy.element.remove();
+            enemies = enemies.filter(e => e !== hitEnemy);
+          }
+        }
+      }
+
+      function getEnemyAtPoint(px, py) {
+        for (const enemy of enemies) {
+          const el = enemy.element;
+          const rect = el.getBoundingClientRect();
+          const gameRect = gameArea.getBoundingClientRect();
+          const elCenterX = ((rect.left + rect.width/2) - gameRect.left) / gameRect.width * 100;
+          const elCenterY = ((rect.top + rect.height/2) - gameRect.top) / gameRect.height * 100;
+          const radiusX = (rect.width / gameRect.width * 100) / 2;
+          const radiusY = (rect.height / gameRect.height * 100) / 2;
+          if (Math.abs(px - elCenterX) <= radiusX && Math.abs(py - elCenterY) <= radiusY) return enemy;
+        }
+        return null;
+      }
+
+      function createShotEffect(pixelX, pixelY) {
+        const img = document.createElement('div');
+        img.className = 'shot-effect';
+        img.style.left = pixelX + 'px';
+        img.style.top = pixelY + 'px';
+        gameArea.appendChild(img);
+        setTimeout(() => img.classList.add('fading'), 2000);
+        img.addEventListener('transitionend', () => img.remove());
+        setTimeout(() => { if (img.parentNode) img.remove(); }, 3500);
+      }
+
+      function enableShot(e) { canShoot = true; }
+
+      gameArea.addEventListener('mousedown', handleShot);
+      window.addEventListener('mouseup', enableShot);
+      gameArea.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        if (touch) handleShot(touch);
+      });
+      window.addEventListener('touchend', enableShot);
+
+      function showMessage(text, persistent = true) {
+        messageOverlay.textContent = text;
+        messageOverlay.style.display = 'block';
+        if (!persistent) setTimeout(() => { messageOverlay.style.display = 'none'; }, 5000);
+      }
+
+      function hideMessage() { messageOverlay.style.display = 'none'; }
+
+      applyTheme('space');
+      showMessage('Ожидание запуска игры...');
+    })();
+  </script>
+</body>
+</html>
