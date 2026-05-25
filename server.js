@@ -4,10 +4,15 @@ var path = require('path');
 var app = express();
 var PORT = 63342;
 
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 var db = JSON.parse(fs.readFileSync(path.join(__dirname, 'db.json'), 'utf8'));
+var theme = db.gameConfig.theme;
+var enemiesRaw = db.themes[theme] || {};
+var background = enemiesRaw.background || '#222';
+delete enemiesRaw.background;
 
 if (db.gameConfig.timeRemaining === undefined) {
     db.gameConfig.timeRemaining = db.gameConfig.roundDuration;
@@ -152,6 +157,7 @@ app.get('/board/state', function(req, res) {
     res.json({
         mode: db.gameConfig.mode,
         theme: theme,
+        background: background,
         enemies: enemies,
         teams: db.teams.map(function(t) {
             return { name: t.name, score: t.score };
