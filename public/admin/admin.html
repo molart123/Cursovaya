@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Settings for game</title>
+    <title>Настройки игры</title>
     <link rel="stylesheet" href="admin.css">
 </head>
 <body>
@@ -21,23 +21,17 @@
 
     <div class="section">
         <h3>Тематика игры</h3>
-        <select id="themeSelect">
-            <option value="super_heroes">Герои и злодеи</option>
-            <option value="frost_legion">Злые снеговики</option>
-
-
-
-        </select>
+        <select id="themeSelect"></select>
     </div>
 
     <div class="section">
-        <h3>Длительность раунда (секунд)</h3>
+        <h3>Длительность раунда (сек)</h3>
         <input type="number" id="roundDurationInput" min="10" value="150">
     </div>
 
     <div class="section">
         <h3>Оставшееся время</h3>
-        <div id="timerDisplay" style="font-size: 2rem; font-weight: bold;">0</div>
+        <div id="timerDisplay" style="font-size:2rem;font-weight:bold;">0:00</div>
     </div>
 
     <div class="section">
@@ -45,17 +39,17 @@
         <div id="isRunning" class="btn-group">
             <button id="startGameBtn">Начать игру</button>
             <button id="shutdownGameBtn" class="danger-btn">Выключить игру</button>
-            <button id="stopGameBtn" class="danger-btn">Остановить игру</button>
-            <button id="resumeGameBtn">Продолжить игру</button>
+            <button id="stopGameBtn" class="danger-btn">Остановить</button>
+            <button id="resumeGameBtn">Продолжить</button>
         </div>
     </div>
 
     <div id="teamsContainer" class="section">
         <h3>Команды</h3>
-        <div class="team-block"><span id="team1NameLabel">Команда 1:</span><button id="team1RenameBtn">Изменить</button><span id="team1ScoreLabel">Счет: 0</span></div>
-        <div class="team-block"><span id="team2NameLabel">Команда 2:</span><button id="team2RenameBtn">Изменить</button><span id="team2ScoreLabel">Счет: 0</span></div>
-        <div class="team-block"><span id="team3NameLabel">Команда 3:</span><button id="team3RenameBtn">Изменить</button><span id="team3ScoreLabel">Счет: 0</span></div>
-        <div class="team-block"><span id="team4NameLabel">Команда 4:</span><button id="team4RenameBtn">Изменить</button><span id="team4ScoreLabel">Счет: 0</span></div>
+        <div class="team-block"><span id="team1NameLabel">Команда 1:</span><button id="team1RenameBtn">Изменить</button><span id="team1ScoreLabel">Счёт: 0</span></div>
+        <div class="team-block"><span id="team2NameLabel">Команда 2:</span><button id="team2RenameBtn">Изменить</button><span id="team2ScoreLabel">Счёт: 0</span></div>
+        <div class="team-block"><span id="team3NameLabel">Команда 3:</span><button id="team3RenameBtn">Изменить</button><span id="team3ScoreLabel">Счёт: 0</span></div>
+        <div class="team-block"><span id="team4NameLabel">Команда 4:</span><button id="team4RenameBtn">Изменить</button><span id="team4ScoreLabel">Счёт: 0</span></div>
     </div>
 </div>
 <script src="admin.js"></script>

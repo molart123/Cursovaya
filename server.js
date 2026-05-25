@@ -2,17 +2,12 @@ var express = require('express');
 var fs = require('fs');
 var path = require('path');
 var app = express();
-var PORT = 63342;
-
+var PORT = 3000;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 var db = JSON.parse(fs.readFileSync(path.join(__dirname, 'db.json'), 'utf8'));
-var theme = db.gameConfig.theme;
-var enemiesRaw = db.themes[theme] || {};
-var background = enemiesRaw.background || '#222';
-delete enemiesRaw.background;
 
 if (db.gameConfig.timeRemaining === undefined) {
     db.gameConfig.timeRemaining = db.gameConfig.roundDuration;
@@ -46,13 +41,8 @@ function stopGame() {
     db.gameConfig.isRunning = false;
     db.gameConfig.isStarting = false;
     db.gameConfig.timeRemaining = db.gameConfig.roundDuration;
-    db.teams.forEach(function(t) {
-        t.score = 0;
-    });
-    if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-    }
+    db.teams.forEach(function(t) { t.score = 0; });
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     saveDB();
 }
 
@@ -60,15 +50,11 @@ if (db.gameConfig.isRunning && db.gameConfig.timeRemaining > 0) {
     startServerTimer();
 }
 
-app.get('/config', function(req, res) {
-    res.json(db);
-});
+// === API ===
+app.get('/config', function(req, res) { res.json(db); });
 
 app.get('/themes', function(req, res) {
-    res.json({
-        themes: Object.keys(db.themes),
-        currentTheme: db.gameConfig.theme
-    });
+    res.json({ themes: Object.keys(db.themes), currentTheme: db.gameConfig.theme });
 });
 
 app.post('/game-mode', function(req, res) {
@@ -103,65 +89,48 @@ app.post('/round-duration', function(req, res) {
 
 app.post('/game/process', function(req, res) {
     var key = req.body.key;
-
     if (key === 'start game') {
         db.gameConfig.isStarting = true;
         db.gameConfig.isRunning = true;
         db.gameConfig.timeRemaining = db.gameConfig.roundDuration;
-        db.teams.forEach(function(t) {
-            t.score = 0;
-        });
+        db.teams.forEach(function(t) { t.score = 0; });
         startServerTimer();
-    }
-    else if (key === 'stop game') {
+    } else if (key === 'stop game') {
         db.gameConfig.isRunning = false;
-        if (timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-        }
-    }
-    else if (key === 'resume game') {
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    } else if (key === 'resume game') {
         if (!db.gameConfig.isRunning && db.gameConfig.isStarting && db.gameConfig.timeRemaining > 0) {
             db.gameConfig.isRunning = true;
             startServerTimer();
         }
-    }
-    else if (key === 'shutdown game') {
+    } else if (key === 'shutdown game') {
         stopGame();
     }
-
     saveDB();
     res.json({ ok: true });
 });
 
 app.get('/board/state', function(req, res) {
     var theme = db.gameConfig.theme;
-    var enemiesRaw = db.themes[theme] || {};
+    var raw = db.themes[theme] || {};
+    var background = raw.background ? '/' + raw.background : null;
     var enemies = {};
-
-    for (var key in enemiesRaw) {
-        enemies[key] = '/' + enemiesRaw[key];
+    for (var key in raw) {
+        if (key !== 'background') enemies[key] = '/' + raw[key];
     }
 
     var status = 'stopped';
-    if (db.gameConfig.isRunning && db.gameConfig.timeRemaining > 0) {
-        status = 'active';
-    } else if (!db.gameConfig.isRunning && db.gameConfig.isStarting && db.gameConfig.timeRemaining > 0) {
-        status = 'paused';
-    } else if (db.gameConfig.timeRemaining <= 0 && db.gameConfig.isStarting) {
-        status = 'finished';
-    } else if (!db.gameConfig.isStarting) {
-        status = 'shutdown';
-    }
+    if (db.gameConfig.isRunning && db.gameConfig.timeRemaining > 0) status = 'active';
+    else if (!db.gameConfig.isRunning && db.gameConfig.isStarting && db.gameConfig.timeRemaining > 0) status = 'paused';
+    else if (db.gameConfig.timeRemaining <= 0 && db.gameConfig.isStarting) status = 'finished';
+    else if (!db.gameConfig.isStarting) status = 'shutdown';
 
     res.json({
         mode: db.gameConfig.mode,
         theme: theme,
         background: background,
         enemies: enemies,
-        teams: db.teams.map(function(t) {
-            return { name: t.name, score: t.score };
-        }),
+        teams: db.teams.map(function(t) { return { name: t.name, score: t.score }; }),
         remaining: db.gameConfig.timeRemaining,
         status: status
     });
@@ -170,14 +139,17 @@ app.get('/board/state', function(req, res) {
 app.post('/board/score', function(req, res) {
     var index = parseInt(req.body.teamId) - 1;
     if (index >= 0 && index < db.teams.length) {
-        db.teams[index].score = db.teams[index].score + req.body.points;
+        db.teams[index].score += req.body.points;
         saveDB();
         res.json({ ok: true, score: db.teams[index].score });
-    } else {
-        res.status(400).json({ ok: false });
-    }
+    } else res.status(400).json({ ok: false });
 });
 
-app.listen(PORT, function() {
-    console.log('http://localhost:' + PORT);
+// Слушаем все интерфейсы, выводим ссылки
+app.listen(PORT, '0.0.0.0', function() {
+    console.log('========================================');
+    console.log('  Сервер запущен на порту ' + PORT);
+    console.log('  Локально: http://localhost:' + PORT + '/admin/admin.html');
+    console.log('  Доска 1: http://localhost:' + PORT + '/boards/board1/board1.html');
+    console.log('  Доска 2: http://localhost:' + PORT + '/boards/board2/board2.html');
 });
