@@ -1,7 +1,7 @@
 {
   "gameConfig": {
     "mode": "2board4team",
-    "theme": "heroes_vs_enemies",
+    "theme": "super_heroes",
     "isRunning": false,
     "isStarting": false,
     "roundDuration": 600,
@@ -9,7 +9,7 @@
   },
   "teams": [
     {
-      "name": "ыфс",
+      "name": "Команда 1",
       "score": 0
     },
     {
@@ -27,11 +27,17 @@
   ],
   "boards": [],
   "themes": {
-    "heroes_vs_enemies": {
+    "super_heroes": {
       "small_enemy": "themes/super_heroes/small_enemy.jpg",
       "medium_enemy": "themes/super_heroes/medium_enemy.jpg",
-      "big_enemy": "themes/super_heroes/big_enemy.jpg"
+      "big_enemy": "themes/super_heroes/big_enemy.jpg",
+      "background": "themes/super_heroes/hero_background.jpg"
     },
-    "space": {}
+    "frost_legion": {
+      "small_enemy": "themes/frost_legion/small_enemy.jpg",
+      "medium_enemy": "themes/frost_legion/medium_enemy.jpg",
+      "big_enemy": "themes/frost_legion/big_enemy.jpg",
+      "background": "themes/frost_legion/frost_background.jpg"
   }
+}
 }

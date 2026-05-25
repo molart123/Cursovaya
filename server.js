@@ -3,6 +3,10 @@ var fs = require('fs');
 var path = require('path');
 var app = express();
 var PORT = 63342;
+var theme = db.gameConfig.theme;
+var enemiesRaw = db.themes[theme] || {};
+var background = enemiesRaw.background || '#222';
+delete enemiesRaw.background;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -152,6 +156,7 @@ app.get('/board/state', function(req, res) {
     res.json({
         mode: db.gameConfig.mode,
         theme: theme,
+        background: background,
         enemies: enemies,
         teams: db.teams.map(function(t) {
             return { name: t.name, score: t.score };
